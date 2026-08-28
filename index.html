@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orvexa — Estoque sob controle, com uma assistente que trabalha com você</title>
+<meta name="description" content="Orvexa é o sistema de almoxarifado com IA integrada: cadastra itens, registra entradas e saídas, avisa antes do problema e sincroniza tudo na nuvem.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#0A121D;
+    --bg-navy:#12283F;
+    --bg-navy-soft:#16314C;
+    --wine-deep:#33091A;
+    --wine:#4A0E24;
+    --wine-soft:#5C1F35;
+    --wine-bright:#8B1E3F;
+    --wine-bright-2:#B32C51;
+    --blue-bright:#2E6DB4;
+    --blue-bright-2:#4F8FD6;
+    --ink:#F5EEEF;
+    --muted:#BBA3AC;
+    --muted-2:#8C97A8;
+    --line-wine:#6B2C42;
+    --line-navy:#254264;
+    --green:#22C55E;
+    --amber:#F5A524;
+    --purple:#6C5CE9;
+    --radius:14px;
+    --maxw:1180px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg-deep);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", -apple-system, sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{
+    font-family:"Fraunces", Georgia, serif;
+    margin:0;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  em{font-style:italic; color:var(--wine-bright-2);}
+  a{color:inherit;}
+  img,svg{display:block;}
+  .mono{font-family:"IBM Plex Mono", monospace;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+
+  /* ---------- background texture ---------- */
+  body{
+    background:
+      radial-gradient(1100px 600px at 15% -10%, rgba(139,30,63,0.22), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(46,109,180,0.16), transparent 55%),
+      var(--bg-deep);
+  }
+
+  /* ---------- nav ---------- */
+  header.nav{
+    position:sticky; top:0; z-index:50;
+    background:rgba(10,18,29,0.82);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .nav-inner{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 28px;
+    max-width:var(--maxw); margin:0 auto;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-family:"Fraunces",serif; font-weight:600; font-size:1.25rem;}
+  .brand .mark{width:32px; height:32px;}
+  .nav-links{display:flex; align-items:center; gap:30px; font-size:0.93rem; color:var(--muted);}
+  .nav-links a{text-decoration:none; transition:color .2s;}
+  .nav-links a:hover{color:var(--ink);}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:11px 22px; border-radius:999px;
+    font-size:0.92rem; font-weight:600;
+    text-decoration:none; cursor:pointer; border:none;
+    transition:transform .18s ease, box-shadow .18s ease, background .2s;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{
+    background:linear-gradient(135deg, var(--wine-bright-2), var(--wine-bright));
+    color:#fff;
+    box-shadow:0 8px 24px -8px rgba(139,30,63,0.65);
+  }
+  .btn-primary:hover{box-shadow:0 10px 30px -6px rgba(139,30,63,0.8); transform:translateY(-1px);}
+  .btn-ghost{
+    background:transparent; color:var(--ink);
+    border:1px solid rgba(255,255,255,0.18);
+  }
+  .btn-ghost:hover{border-color:rgba(255,255,255,0.4); background:rgba(255,255,255,0.04);}
+  .btn-sm{padding:8px 16px; font-size:0.85rem;}
+  .nav-cta{display:none;}
+  @media(min-width:720px){ .nav-cta{display:inline-flex;} }
+
+  /* mobile nav links hide */
+  @media(max-width:900px){
+    .nav-links{display:none;}
+  }
+
+  /* ---------- ribbon mark (SVG logo) ---------- */
+  .ribbon-spin{ animation:spin 26s linear infinite; transform-origin:50% 50%; }
+  @keyframes spin{ to{ transform:rotate(360deg);} }
+  @media (prefers-reduced-motion:reduce){ .ribbon-spin{animation:none;} }
+
+  /* ---------- hero ---------- */
+  .hero{
+    padding:96px 0 60px;
+    display:grid; grid-template-columns:1.1fr 0.9fr; gap:56px; align-items:center;
+  }
+  @media(max-width:900px){ .hero{grid-template-columns:1fr; padding:56px 0 40px; text-align:center;} }
+
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:"IBM Plex Mono", monospace; font-size:0.74rem; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--wine-bright-2);
+    padding:6px 14px; border:1px solid var(--line-wine); border-radius:999px;
+    background:rgba(139,30,63,0.1);
+    margin-bottom:22px;
+  }
+  .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green);}
+
+  .hero h1{
+    font-size:clamp(2.3rem, 4.6vw, 3.6rem);
+    line-height:1.06;
+    letter-spacing:-0.02em;
+  }
+  .hero p.lead{
+    margin-top:22px; max-width:520px;
+    color:var(--muted); font-size:1.08rem;
+  }
+  @media(max-width:900px){ .hero p.lead{margin-left:auto; margin-right:auto;} }
+
+  .hero-ctas{display:flex; gap:14px; margin-top:34px; flex-wrap:wrap;}
+  @media(max-width:900px){ .hero-ctas{justify-content:center;} }
+
+  .hero-note{
+    margin-top:16px; font-size:0.82rem; color:var(--muted-2);
+    display:flex; align-items:center; gap:8px;
+  }
+  @media(max-width:900px){ .hero-note{justify-content:center;} }
+
+  .hero-visual{ position:relative; display:flex; align-items:center; justify-content:center; }
+  .hero-visual .glow{
+    position:absolute; width:420px; height:420px; border-radius:50%;
+    background:radial-gradient(circle, rgba(139,30,63,0.35), transparent 70%);
+    filter:blur(10px);
+  }
+  .hero-visual svg{ position:relative; width:min(360px, 70vw); height:auto; }
+
+  /* ---------- tag strip ---------- */
+  .tags-strip{
+    display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+    padding:0 0 90px;
+  }
+  .tag{
+    font-family:"IBM Plex Mono", monospace; font-size:0.78rem;
+    padding:10px 16px; border-radius:8px;
+    background:var(--wine-soft); border:1px solid var(--line-wine);
+    color:var(--ink); white-space:nowrap;
+    transform:rotate(var(--r, 0deg));
+  }
+  .tag:nth-child(2n){ background:var(--bg-navy-soft); border-color:var(--line-navy); }
+
+  /* ---------- section shells ---------- */
+  section{ padding:90px 0; }
+  .section-head{ max-width:640px; margin:0 auto 56px; text-align:center; }
+  .section-head .eyebrow{margin-bottom:16px;}
+  .section-head h2{ font-size:clamp(1.7rem, 3vw, 2.4rem); }
+  .section-head p{ color:var(--muted); margin-top:14px; font-size:1.02rem; }
+
+  .band-wine{ background:linear-gradient(180deg, var(--wine-deep), var(--wine) 60%, var(--wine-deep)); }
+  .band-navy{ background:linear-gradient(180deg, var(--bg-navy), #0d1e30 90%); }
+
+  /* ---------- features grid ---------- */
+  .features-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:22px;
+  }
+  @media(max-width:940px){ .features-grid{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:640px){ .features-grid{grid-template-columns:1fr;} }
+
+  .feature-card{
+    background:rgba(255,255,255,0.035);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:var(--radius);
+    padding:28px 24px;
+    transition:transform .25s ease, border-color .25s ease, background .25s ease;
+  }
+  .feature-card:hover{ transform:translateY(-4px); border-color:rgba(255,255,255,0.18); background:rgba(255,255,255,0.05); }
+  .feature-card .icon{
+    width:42px; height:42px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:18px; font-size:1.2rem;
+  }
+  .feature-card h3{ font-size:1.1rem; margin-bottom:10px; font-weight:600; }
+  .feature-card p{ color:var(--muted); font-size:0.93rem; margin:0; }
+
+  .ic-a{ background:rgba(46,109,180,0.18); color:var(--blue-bright-2); }
+  .ic-b{ background:rgba(139,30,63,0.22); color:var(--wine-bright-2); }
+  .ic-c{ background:rgba(34,197,94,0.16); color:var(--green); }
+  .ic-d{ background:rgba(245,165,36,0.16); color:var(--amber); }
+  .ic-e{ background:rgba(108,92,233,0.18); color:var(--purple); }
+  .ic-f{ background:rgba(46,109,180,0.18); color:var(--blue-bright-2); }
+
+  /* ---------- avisos mock ---------- */
+  .avisos-wrap{
+    display:grid; grid-template-columns:0.9fr 1.1fr; gap:56px; align-items:center;
+  }
+  @media(max-width:900px){ .avisos-wrap{grid-template-columns:1fr;} }
+
+  .avisos-copy .eyebrow{margin-bottom:18px;}
+  .avisos-copy h2{ font-size:clamp(1.7rem,3vw,2.3rem); margin-bottom:18px; }
+  .avisos-copy p{ color:var(--muted); font-size:1.02rem; }
+
+  .avisos-card{
+    background:var(--bg-navy);
+    border:1px solid var(--line-navy);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.55);
+  }
+  .avisos-header{
+    background:linear-gradient(135deg, var(--wine-bright), var(--wine));
+    padding:20px 24px;
+    display:flex; align-items:center; gap:12px;
+  }
+  .avisos-header .mark-sm{width:26px; height:26px;}
+  .avisos-header div h4{ font-family:"Fraunces",serif; font-size:1.05rem; margin:0; color:#fff; }
+  .avisos-header div span{ font-size:0.78rem; color:rgba(255,255,255,0.75); }
+  .avisos-body{ padding:22px; display:flex; flex-direction:column; gap:12px; }
+  .aviso-item{
+    display:flex; gap:14px; align-items:flex-start;
+    background:var(--wine);
+    border:1px solid var(--line-wine);
+    border-radius:10px;
+    padding:14px 16px;
+    border-left:4px solid var(--stripe, var(--green));
+  }
+  .aviso-item .emoji{ font-size:1.3rem; line-height:1; }
+  .aviso-item p{ margin:0; font-size:0.92rem; color:var(--ink); }
+
+  /* ---------- how it works ---------- */
+  .how-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:30px; counter-reset:step;
+  }
+  @media(max-width:800px){ .how-grid{grid-template-columns:1fr;} }
+  .how-step{ position:relative; padding-top:8px; }
+  .how-step .num{
+    font-family:"Fraunces",serif; font-weight:600; font-size:2.4rem;
+    color:transparent; -webkit-text-stroke:1.5px rgba(255,255,255,0.28);
+    margin-bottom:10px; display:block;
+  }
+  .how-step h3{ font-size:1.08rem; margin-bottom:10px; }
+  .how-step p{ color:var(--muted); font-size:0.93rem; margin:0; }
+
+  /* ---------- download ---------- */
+  .download-panel{
+    background:linear-gradient(135deg, var(--wine-soft), var(--wine-deep));
+    border:1px solid var(--line-wine);
+    border-radius:22px;
+    padding:64px 48px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .download-panel::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(500px 260px at 50% 0%, rgba(255,255,255,0.08), transparent 70%);
+  }
+  .download-panel h2{ font-size:clamp(1.7rem,3.4vw,2.5rem); position:relative; }
+  .download-panel p{ color:var(--muted); max-width:480px; margin:16px auto 32px; position:relative; font-size:1rem; }
+  .download-ctas{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; position:relative; }
+  .sys-req{
+    margin-top:22px; font-family:"IBM Plex Mono",monospace; font-size:0.78rem;
+    color:var(--muted-2); position:relative;
+  }
+
+  /* ---------- contact ---------- */
+  .contact-panel{
+    display:flex; align-items:center; justify-content:space-between; gap:30px; flex-wrap:wrap;
+    background:rgba(255,255,255,0.035);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:18px; padding:40px 40px;
+  }
+  .contact-panel h3{ font-size:1.3rem; margin-bottom:8px; }
+  .contact-panel p{ color:var(--muted); margin:0; font-size:0.95rem; }
+  .email-pill{
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--bg-navy); border:1px solid var(--line-navy);
+    padding:12px 18px; border-radius:999px;
+    font-family:"IBM Plex Mono", monospace; font-size:0.92rem;
+    cursor:pointer; user-select:all;
+  }
+  .email-pill svg{ width:16px; height:16px; opacity:0.8; }
+  .copy-msg{ font-size:0.78rem; color:var(--green); margin-top:8px; opacity:0; transition:opacity .2s; text-align:right; }
+  .copy-msg.show{ opacity:1; }
+
+  /* ---------- footer ---------- */
+  footer{ padding:44px 0; border-top:1px solid rgba(255,255,255,0.07); }
+  .footer-inner{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .footer-inner .brand{ font-size:1.05rem; }
+  .footer-inner .copy{ color:var(--muted-2); font-size:0.82rem; }
+
+  /* ---------- reveal on scroll ---------- */
+  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .6s ease, transform .6s ease; }
+  .reveal.in{ opacity:1; transform:translateY(0); }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gradWineNav" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#B32C51"/><stop offset="100%" stop-color="#4A0E24"/>
+          </linearGradient>
+          <linearGradient id="gradBlueNav" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#4F8FD6"/><stop offset="100%" stop-color="#12283F"/>
+          </linearGradient>
+        </defs>
+        <circle cx="50" cy="50" r="40" fill="none" stroke="url(#gradBlueNav)" stroke-width="13"/>
+        <path d="M 50 10 A 40 40 0 0 1 84 68" fill="none" stroke="url(#gradWineNav)" stroke-width="13" stroke-linecap="round"/>
+        <path d="M 50 90 A 40 40 0 0 1 16 32" fill="none" stroke="url(#gradWineNav)" stroke-width="13" stroke-linecap="round"/>
+      </svg>
+      Orvexa
+    </div>
+    <nav class="nav-links">
+      <a href="#recursos">Recursos</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#avisos">Loren IA</a>
+      <a href="#contato">Contato</a>
+    </nav>
+    <a href="https://github.com/JGNRocha/Orvexa/releases/download/v1.0/OrvexaSetup.exe" class="btn btn-primary btn-sm nav-cta">Baixar Orvexa</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero wrap">
+    <div>
+      <span class="eyebrow"><span class="dot"></span> Sistema de almoxarifado com IA integrada</span>
+      <h1>O estoque avisa antes de <em>virar problema.</em></h1>
+      <p class="lead">Orvexa é o sistema de estoque com uma assistente de IA embutida: cadastra itens, registra entradas e saídas por texto, avisa quando algo precisa de atenção — e sincroniza tudo na nuvem, de qualquer computador.</p>
+      <div class="hero-ctas">
+        <a href="https://github.com/JGNRocha/Orvexa/releases/download/v1.0/OrvexaSetup.exe" class="btn btn-primary">Baixar o Orvexa</a>
+        <a href="#recursos" class="btn btn-ghost">Ver recursos</a>
+      </div>
+      <div class="hero-note">
+        <span>🖥️ Windows 10 / 11</span>&nbsp;·&nbsp;<span>Instalação em 1 clique</span>&nbsp;·&nbsp;<span>Sem mensalidade pra testar</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="glow"></div>
+      <svg class="ribbon-spin" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="gWine" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#B32C51"/><stop offset="100%" stop-color="#3D0B1D"/>
+          </linearGradient>
+          <linearGradient id="gBlue" x1="1" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6FB0EE"/><stop offset="100%" stop-color="#12283F"/>
+          </linearGradient>
+        </defs>
+        <circle cx="100" cy="100" r="78" fill="none" stroke="url(#gBlue)" stroke-width="24"/>
+        <path d="M 100 22 A 78 78 0 0 1 165 133" fill="none" stroke="url(#gWine)" stroke-width="24" stroke-linecap="round"/>
+        <path d="M 100 178 A 78 78 0 0 1 35 67" fill="none" stroke="url(#gWine)" stroke-width="24" stroke-linecap="round"/>
+        <circle cx="100" cy="100" r="42" fill="var(--bg-deep)"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- TAG STRIP -->
+  <div class="wrap">
+    <div class="tags-strip reveal">
+      <span class="tag" style="--r:-2deg">entradas &amp; saídas</span>
+      <span class="tag" style="--r:1.5deg">loren ia</span>
+      <span class="tag" style="--r:-1deg">relatório em pdf</span>
+      <span class="tag" style="--r:2deg">nuvem em tempo real</span>
+      <span class="tag" style="--r:-1.5deg">controle por colaborador</span>
+      <span class="tag" style="--r:1deg">alertas automáticos</span>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="recursos" class="band-wine">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">O que o Orvexa faz</span>
+        <h2>Tudo que um almoxarifado precisa, num só lugar.</h2>
+        <p>Sem planilha perdida, sem "quem tirou isso do estoque". Cada movimentação fica registrada, e a Loren IA cuida do trabalho repetitivo.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="icon ic-a">📦</div>
+          <h3>Estoque organizado por andar</h3>
+          <p>Cadastre itens, quantidades e estoque mínimo. Veja na hora o que está cheio, regular ou baixo — organizado por andar ou setor.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon ic-b">💬</div>
+          <h3>Loren IA, sua assistente</h3>
+          <p>Peça pra cadastrar um item, registrar uma entrada ou saída, ou gerar um PDF — tudo por texto, sem precisar abrir menu nenhum.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon ic-c">🔔</div>
+          <h3>Avisos antes do problema</h3>
+          <p>A Loren te mostra quantos itens estão no nível ideal, quais precisam de reposição e quais estão parados há semanas.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon ic-d">👥</div>
+          <h3>Controle por colaborador</h3>
+          <p>Saiba quem retirou o quê, quando e de qual andar. Relatório semanal pronto pra imprimir ou arquivar.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon ic-e">☁️</div>
+          <h3>Tudo sincronizado na nuvem</h3>
+          <p>Login por conta própria. Troque de computador, o estoque continua exatamente onde parou.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon ic-f">📄</div>
+          <h3>Relatórios em PDF</h3>
+          <p>Histórico completo de movimentações e relatório semanal de retiradas, exportados com um clique.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AVISOS MOCK -->
+  <section id="avisos" class="band-navy">
+    <div class="wrap avisos-wrap">
+      <div class="avisos-copy reveal">
+        <span class="eyebrow">A Loren IA em ação</span>
+        <h2>Ela não espera você perguntar.</h2>
+        <p>A Loren acompanha o estoque sozinha e te avisa com números concretos: quanto está saudável, o que precisa de atenção e o que já devia ter sido resolvido há tempo.</p>
+      </div>
+      <div class="avisos-card reveal">
+        <div class="avisos-header">
+          <svg class="mark-sm" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#ffffff" stroke-opacity="0.9" stroke-width="13"/>
+            <path d="M 50 10 A 40 40 0 0 1 84 68" fill="none" stroke="#ffffff" stroke-width="13" stroke-linecap="round"/>
+          </svg>
+          <div>
+            <h4>Avisos da Loren IA</h4>
+            <span>Situação atual do estoque</span>
+          </div>
+        </div>
+        <div class="avisos-body">
+          <div class="aviso-item" style="--stripe:var(--green)">
+            <span class="emoji">✅</span>
+            <p><strong>92%</strong> dos produtos estão dentro do nível ideal.</p>
+          </div>
+          <div class="aviso-item" style="--stripe:var(--amber)">
+            <span class="emoji">⚠️</span>
+            <p><strong>7</strong> produtos precisam de reposição.</p>
+          </div>
+          <div class="aviso-item" style="--stripe:var(--purple)">
+            <span class="emoji">⏳</span>
+            <p><strong>3</strong> produtos estão parados há mais de 60 dias sem serem retirados.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="como-funciona">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Como funciona</span>
+        <h2>Do download ao primeiro item cadastrado, em minutos.</h2>
+      </div>
+      <div class="how-grid">
+        <div class="how-step reveal">
+          <span class="num">01</span>
+          <h3>Baixe e instale</h3>
+          <p>Um instalador só, sem configuração técnica. Funciona em qualquer PC com Windows 10 ou 11.</p>
+        </div>
+        <div class="how-step reveal">
+          <span class="num">02</span>
+          <h3>Crie sua conta</h3>
+          <p>E-mail, usuário, senha e um código de recuperação — pronto, seus dados já ficam salvos na nuvem.</p>
+        </div>
+        <div class="how-step reveal">
+          <span class="num">03</span>
+          <h3>Cadastre e deixe a Loren cuidar</h3>
+          <p>Adicione os itens do seu estoque e comece a registrar entradas e saídas — por menu ou só conversando com a IA.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOWNLOAD -->
+  <section id="baixar" class="band-wine">
+    <div class="wrap">
+      <div class="download-panel reveal">
+        <h2>Baixe o Orvexa agora.</h2>
+        <p>Instalador único para Windows. Sem mensalidade pra começar a testar no seu almoxarifado.</p>
+        <div class="download-ctas">
+          <!-- Link direto do instalador (GitHub Releases) -->
+          <a href="https://github.com/JGNRocha/Orvexa/releases/download/v1.0/OrvexaSetup.exe" class="btn btn-primary">⬇ Baixar para Windows</a>
+          <a href="#contato" class="btn btn-ghost">Quero antes conversar com vocês</a>
+        </div>
+        <div class="sys-req">windows 10/11 · 64-bit · ~40mb</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contato">
+    <div class="wrap">
+      <div class="contact-panel reveal">
+        <div>
+          <h3>Fala com a gente</h3>
+          <p>Dúvidas, sugestões ou proposta comercial — responde direto no e-mail.</p>
+        </div>
+        <div>
+          <div class="email-pill" id="emailPill" title="Clique para copiar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M22 6l-10 7L2 6"/></svg>
+            orvexaempresa@gmail.com
+          </div>
+          <div class="copy-msg" id="copyMsg">Copiado ✓</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="brand" style="font-size:1.05rem;">
+      <svg class="mark" style="width:24px;height:24px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="40" fill="none" stroke="url(#gradBlueNav)" stroke-width="13"/>
+        <path d="M 50 10 A 40 40 0 0 1 84 68" fill="none" stroke="url(#gradWineNav)" stroke-width="13" stroke-linecap="round"/>
+        <path d="M 50 90 A 40 40 0 0 1 16 32" fill="none" stroke="url(#gradWineNav)" stroke-width="13" stroke-linecap="round"/>
+      </svg>
+      Orvexa
+    </div>
+    <span class="copy">© 2026 Orvexa · orvexaempresa@gmail.com</span>
+  </div>
+</footer>
+
+<script>
+  // Reveal on scroll
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => io.observe(el));
+
+  // Copy email to clipboard
+  const pill = document.getElementById('emailPill');
+  const msg = document.getElementById('copyMsg');
+  pill.addEventListener('click', () => {
+    navigator.clipboard.writeText('orvexaempresa@gmail.com').then(() => {
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 1800);
+    });
+  });
+</script>
+
+</body>
+</html>
